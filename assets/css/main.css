@@ -2019,6 +2019,10 @@ input, select, textarea {
 			font-weight: 400;
 		}
 
+		.icon {
+  			color: green;
+		}
+
 		.icon > .label {
 			display: none;
 		}
@@ -2034,6 +2038,7 @@ input, select, textarea {
 		.icon.brands:before {
 			font-family: 'Font Awesome 5 Brands';
 		}
+
 
 /* Image */
 

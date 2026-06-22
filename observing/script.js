@@ -2413,7 +2413,14 @@ function setActiveTab(tab, save = true) {
   dom.skyView.hidden = !isSky;
   dom.airmassView.hidden = !isAirmass;
   dom.planView.hidden = !isPlan;
-  if (!isSky) {
+  if (isSky) {
+    hideStarPopup();
+    setTimeout(() => {
+      resizeCanvas();
+      renderSky();
+      updateActiveTargetPanel();
+    }, 0);
+  } else {
     hideStarPopup();
     setTimeout(() => {
       if (isAirmass) {
@@ -3489,14 +3496,6 @@ function drawKeckPointingLimits(limits) {
   drawKeckAltitudeArc(openRange.startAz, openRange.endAz, limits.normalMinAlt);
   skyCtx.setLineDash([5, 5]);
   drawKeckAltitudeArc(0, 360, 85);
-  skyCtx.setLineDash([]);
-  skyCtx.fillStyle = "rgba(255, 249, 234, 0.96)";
-  skyCtx.font = `700 13px "Space Grotesk", sans-serif`;
-  skyCtx.textAlign = "left";
-  skyCtx.fillText(`${limits.label} pointing limits`, canvasGeom.cx - canvasGeom.radius + 18, canvasGeom.cy - canvasGeom.radius + 26);
-  skyCtx.font = `11px "IBM Plex Mono", monospace`;
-  skyCtx.fillText(`Deck block: az ${limits.deckAzStart.toFixed(1)}°-${limits.deckAzEnd.toFixed(1)}°, alt < ${limits.deckMinAlt.toFixed(1)}°`, canvasGeom.cx - canvasGeom.radius + 18, canvasGeom.cy - canvasGeom.radius + 44);
-  skyCtx.fillText(`Vignetted: alt < ${limits.normalMinAlt}° outside deck sector; guiding caution above 85°`, canvasGeom.cx - canvasGeom.radius + 18, canvasGeom.cy - canvasGeom.radius + 60);
   skyCtx.restore();
 }
 

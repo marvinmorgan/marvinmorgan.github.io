@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Observing Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-orb orb-c"></div>
+
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>Mock Observing Planner</h1>
+        <p>Interactive sky-globe target tracker with RA/DEC, moon position, and a mock schedule optimizer.</p>
+        <p><strong>Contributions from Marvin M. &amp; Lillian J. at UCSB</strong></p>
+      </div>
+      <div class="status-pill" id="statusPill">Ready</div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel controls">
+        <section class="block">
+          <h2>Observatory & Time</h2>
+          <label>
+            Observatory
+            <select id="observatorySelect"></select>
+          </label>
+          <label>
+            Date (UTC)
+            <input type="date" id="dateInput">
+          </label>
+          <div class="date-jump-row">
+            <input type="text" id="dateJumpInput" placeholder="YYYY-MM-DD (any date)">
+            <button type="button" id="dateJumpBtn">Set Date</button>
+          </div>
+          <div class="slider-row">
+            <button type="button" id="stepBackBtn">-10m</button>
+            <input type="range" id="timeSlider" min="0" max="1439" step="1" value="0">
+            <button type="button" id="stepFwdBtn">+10m</button>
+          </div>
+          <div class="play-row">
+            <button type="button" id="playPauseBtn">Play</button>
+            <label>
+              Rate
+              <select id="playRateSelect">
+                <option value="1">1x</option>
+                <option value="5">5x</option>
+                <option value="15" selected>15x</option>
+                <option value="60">60x</option>
+              </select>
+            </label>
+          </div>
+          <div class="time-grid">
+            <div><span>UT</span><strong id="utTime">-</strong></div>
+            <div><span>Telescope</span><strong id="telescopeTime">-</strong></div>
+            <div><span>Laptop</span><strong id="localTime">-</strong></div>
+            <div><span>LST</span><strong id="lstValue">-</strong></div>
+            <div><span>JD</span><strong id="jdValue">-</strong></div>
+            <div><span>MJD</span><strong id="mjdValue">-</strong></div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Sky Layers</h2>
+          <label class="inline-toggle">
+            <input type="checkbox" id="airmassGridToggle" checked>
+            Airmass Grid
+          </label>
+          <label class="inline-toggle">
+            <input type="checkbox" id="zenithGridToggle" checked>
+            Zenith Grid
+          </label>
+          <label class="inline-toggle">
+            <input type="checkbox" id="equatorialGridToggle">
+            Equatorial Grid
+          </label>
+          <label class="inline-toggle">
+            <input type="checkbox" id="showAllTracksToggle" checked>
+            Show Highlighted Tracks
+          </label>
+          <label class="inline-toggle">
+            <input type="checkbox" id="showMoonToggle" checked>
+            Show Moon Marker
+          </label>
+        </section>
+
+        <section class="block">
+          <h2>Add Targets</h2>
+          <label>
+            SIMBAD Name
+            <input type="text" id="targetNameInput" placeholder="e.g. Vega">
+          </label>
+          <button type="button" id="addByNameBtn">Add by Name</button>
+          <div class="manual-grid">
+            <label>
+              RA (hh:mm:ss or deg)
+              <input type="text" id="manualRaInput" placeholder="18:36:56.3">
+            </label>
+            <label>
+              DEC (+dd:mm:ss or deg)
+              <input type="text" id="manualDecInput" placeholder="+38:47:01">
+            </label>
+          </div>
+          <label>
+            Default Exposure (minutes)
+            <input type="number" id="defaultExposureInput" min="1" max="600" step="1" value="20">
+          </label>
+          <button type="button" id="addManualBtn">Add RA/DEC</button>
+          <div class="folder-create-row">
+            <label>
+              New Folder
+              <input type="text" id="newFolderInput" placeholder="e.g. Night_A">
+            </label>
+            <button type="button" id="createFolderBtn">Create Folder</button>
+          </div>
+          <label>
+            Target Folder
+            <select id="folderSelect"></select>
+          </label>
+          <label>
+            Import CSV/TXT
+            <input type="file" id="fileInput" accept=".csv,.txt" multiple>
+          </label>
+          <button type="button" id="importFilesBtn">Import File(s)</button>
+          <p class="hint">CSV format: <code>name,ra,dec,exp_min</code> where RA/DEC can be decimal degrees or sexagesimal. <code>exp_min</code> is optional.</p>
+          <label>
+            Folder Filter
+            <select id="folderFilterSelect">
+              <option value="ALL">All folders</option>
+            </select>
+          </label>
+          <div class="folder-list" id="folderList"></div>
+        </section>
+
+        <section class="block target-block">
+          <div class="block-title-row">
+            <h2>Targets</h2>
+            <button type="button" id="clearDoneBtn" class="ghost-btn">Hide Done</button>
+          </div>
+          <label>
+            Search Targets
+            <input type="text" id="targetSearchInput" placeholder="Type target name or folder">
+          </label>
+          <div class="bulk-exposure-row">
+            <label>
+              Bulk Exposure (minutes)
+              <input type="number" id="bulkExposureInput" min="1" max="600" step="1" placeholder="e.g. 15">
+            </label>
+            <button type="button" id="bulkExposureBtn" class="ghost-btn">Update All</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Done</th>
+                  <th>Hi</th>
+                  <th>Focus</th>
+                  <th>Name</th>
+                  <th>RA</th>
+                  <th>DEC</th>
+                  <th>Alt</th>
+                  <th>X</th>
+                  <th>Exp (m)</th>
+                  <th>Folder</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="targetTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Mock Observing Planner</h2>
+          <button type="button" id="optimizeBtn">Mock Observing Planner</button>
+          <p id="planMeta" class="plan-meta">No plan generated yet.</p>
+          <ol id="planList" class="plan-list"></ol>
+        </section>
+      </aside>
+
+      <main class="panel sky-panel">
+        <div class="view-tabs">
+          <button type="button" id="skyTabBtn" class="tab-btn active">Sky Globe</button>
+          <button type="button" id="skyKeck1TabBtn" class="tab-btn">Sky Globe Keck 1</button>
+          <button type="button" id="skyKeck2TabBtn" class="tab-btn">Sky Globe Keck 2</button>
+          <button type="button" id="airmassTabBtn" class="tab-btn">Airmass Plot</button>
+          <button type="button" id="planTabBtn" class="tab-btn">Mock Plan</button>
+        </div>
+
+        <section id="skyView">
+          <div class="canvas-wrap">
+            <canvas id="skyCanvas" width="900" height="900" aria-label="Interactive sky globe"></canvas>
+            <div id="starPopup" class="star-popup hidden">
+              <button type="button" id="closeStarPopupBtn" class="star-popup-close" aria-label="Close star popup">x</button>
+              <div id="starPopupContent"></div>
+            </div>
+          </div>
+          <div class="card-grid">
+            <article class="info-card">
+              <h3>Moon</h3>
+              <div id="moonInfo">Moon data unavailable.</div>
+            </article>
+            <article class="info-card">
+              <h3>Active Target</h3>
+              <div id="activeTargetInfo">Select a target to inspect details.</div>
+            </article>
+            <article class="info-card">
+              <h3>Legend</h3>
+              <ul>
+                <li><span class="dot active"></span> Active target</li>
+                <li><span class="dot highlight"></span> Highlighted target</li>
+                <li><span class="dot done"></span> Done target</li>
+                <li><span class="dot moon"></span> Moon position</li>
+                <li><span class="dot keck-blocked"></span> Keck cannot point</li>
+                <li><span class="dot keck-vignette"></span> Keck vignetted</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="airmassView" hidden>
+          <div class="plot-controls">
+            <label>
+              Plot Target
+              <select id="plotTargetSelect"></select>
+            </label>
+            <label>
+              X-Axis
+              <select id="plotXAxisSelect">
+                <option value="ut" selected>UT</option>
+                <option value="lst">LMST</option>
+              </select>
+            </label>
+            <button type="button" id="syncPlotTargetBtn" class="ghost-btn">Use Active Target</button>
+            <button type="button" id="plotMoonToggleBtn" class="ghost-btn plot-toggle-btn" aria-pressed="false">Moon Airmass: Off</button>
+          </div>
+          <div class="plot-wrap">
+            <canvas id="airmassCanvas" width="1200" height="480" aria-label="Airmass as function of time"></canvas>
+          </div>
+          <div class="card-grid plot-card-grid">
+            <article class="info-card">
+              <h3>Target Airmass</h3>
+              <div id="plotSummary">Select a target to generate the airmass curve.</div>
+            </article>
+            <article class="info-card">
+              <h3>RA/DEC Window</h3>
+              <div id="plotRaDecInfo">RA/DEC limits update with observatory and date.</div>
+            </article>
+            <article class="info-card">
+              <h3>Observatory Limits</h3>
+              <div id="plotConstraintInfo">Visibility constraints shown here.</div>
+            </article>
+          </div>
+        </section>
+
+        <section id="planView" hidden>
+          <div class="plan-view-controls">
+            <button type="button" id="planBuildBtn" class="ghost-btn">Rebuild Plan</button>
+            <button type="button" id="planPdfBtn" class="ghost-btn">Create PDF</button>
+            <div id="planScopeHint" class="plan-scope-hint">Planner uses visible targets unless folders are highlighted.</div>
+            <div class="plan-legend" aria-label="Mock plan legend">
+              <span class="plan-legend-item"><span class="legend-swatch exposure"></span>Exposure</span>
+              <span class="plan-legend-item"><span class="legend-swatch access"></span>Accessibility</span>
+              <span class="plan-legend-item"><span class="legend-swatch sunset"></span>Sunset/Civil</span>
+              <span class="plan-legend-item"><span class="legend-swatch tw12"></span>12 deg Twilight</span>
+            </div>
+          </div>
+          <div id="planBoardWrap" class="plan-board-wrap">
+            <canvas id="planCanvas" width="1200" height="520" aria-label="Mock observing plan timeline"></canvas>
+          </div>
+          <div class="card-grid plot-card-grid">
+            <article class="info-card">
+              <h3>Plan Summary</h3>
+              <div id="planBoardSummary">Generate a plan to view timeline slots.</div>
+            </article>
+            <article class="info-card">
+              <h3>Planner Scope</h3>
+              <div id="planBoardScope">No folder highlight is currently active.</div>
+            </article>
+            <article class="info-card">
+              <h3>Current Time Cursor</h3>
+              <div id="planBoardNow">Current UT cursor is available after plotting.</div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -3879,11 +3879,15 @@ function localSiderealTimeDeg(date, longitudeDeg) {
 }
 
 function resizeCanvas() {
+  const wrapWidth = Math.floor((dom.skyCanvas.parentElement && dom.skyCanvas.parentElement.clientWidth) || 0);
   const rect = dom.skyCanvas.getBoundingClientRect();
-  const size = Math.max(320, Math.floor(Math.min(rect.width, window.innerHeight * 0.78)));
+  const availableWidth = wrapWidth || Math.floor(rect.width) || 900;
+  const viewportHeightLimit = Math.floor(window.innerHeight * 0.78);
+  const size = Math.max(260, Math.floor(Math.min(availableWidth, viewportHeightLimit, 960)));
   const dpr = Math.min(3, (window.devicePixelRatio || 1) * 1.18);
   dom.skyCanvas.width = Math.floor(size * dpr);
   dom.skyCanvas.height = Math.floor(size * dpr);
+  dom.skyCanvas.style.width = `${size}px`;
   dom.skyCanvas.style.height = `${size}px`;
   skyCtx.setTransform(1, 0, 0, 1, 0, 0);
   skyCtx.scale(dpr, dpr);
